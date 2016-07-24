@@ -1,0 +1,16 @@
+f = 3;
+
+g x y = let z = x in z;
+
+h x = case (let y = x in y) of
+        <1> -> 2;
+        <2> -> 5;
+
+lam = \x y z. w;
+
+ff x y = case x of
+           <1> -> case y of
+                    <1> -> 1;
+           <2> -> 2;
+
+double_list f xs = map f
