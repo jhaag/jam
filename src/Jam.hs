@@ -16,7 +16,7 @@ import Jam.Util.Parser
 
 jamMain :: IO ()
 jamMain = do
-  prog <- readFile "/home/jhaag/dev/haskell/jam/src/graph_ex_1.core"
+  prog <- readFile "/home/jhaag/dev/jam/src/graph_ex_1.core"
   print $ tokenize prog
   putStrLn "--------------------------------------------------------------------------------"
   print $ parse prog
