@@ -46,10 +46,9 @@ apStep (stack, dump, heap, globals, stats) a1 a2
 scStep :: TiState -> Name -> [Name] -> CoreExpr -> TiState
 scStep (stack, dump, heap, globals, stats) name args body
     = (stack', dump, heap'', globals, stats)
-  where stack' = addr:drop (length args + 1) stack
+  where stack' = rootAddr:drop (length args + 1) stack
         rootAddr = stack !! length args
-        (heap', addr) = instantiate body heap env
-        heap'' = hUpdate heap' rootAddr $ NInd addr
+        heap'' = instantiate' body rootAddr heap env
         env = argBindings ++ globals
         argBindings = zip args (getArgs heap stack)
 
@@ -58,11 +57,31 @@ getArgs heap (sc:stack) = map getArg stack
   where getArg addr = let (NAp fun arg) = hLookup heap addr
                        in arg
 
+instantiate' :: CoreExpr -> Addr -> TiHeap -> TiGlobals -> TiHeap
+instantiate' (EVar v) addr heap env               = hUpdate heap addr $ NInd $ aLookup env v err
+  where err = "Undefined name " ++ show v
+instantiate' (ENum n) addr heap env               = hUpdate heap addr $ NNum n
+instantiate' (EConstr tag arity) addr heap env    = instantiateConstr tag arity heap env
+instantiate' (EAp e1 e2) addr heap env            = hUpdate heap'' addr (NAp a1 a2)
+  where (heap', a1)   = instantiate e1 heap env
+        (heap'', a2)  = instantiate e2 heap' env
+instantiate' (ELet isRec defs body) addr heap env = instantiate' body addr heap' env'
+  where instantiatedDefs :: [(TiHeap, Addr)]
+        instantiatedDefs 
+          = tail $ scanl (\(heap', _) (_, exp) -> (flip (`instantiate` heap') env') exp) 
+                         (heap, hNull)
+                         defs
+        addrs = map snd instantiatedDefs
+        heap' = (fst . last) instantiatedDefs
+        env'  = zip (map fst defs) addrs ++ env
+instantiate' (ECase exp alts) addr heap env       = error "Cant instantiate case exprs."
+instantiate' (ELam args body) addr heap env       = instantiateLam args body heap env
+
 instantiate :: CoreExpr -> TiHeap -> TiGlobals -> (TiHeap, Addr)
 instantiate (EVar v) heap env               = (heap, aLookup env v err)
   where err = "Undefined name " ++ show v
 instantiate (ENum n) heap env               = hAlloc heap (NNum n)
-instantiate (EConstr tag arity) heap env    = instantiateConstr  tag arity heap env
+instantiate (EConstr tag arity) heap env    = instantiateConstr tag arity heap env
 instantiate (EAp e1 e2) heap env            = hAlloc heap'' (NAp a1 a2)
   where (heap', a1)   = instantiate e1 heap env
         (heap'', a2)  = instantiate e2 heap' env
