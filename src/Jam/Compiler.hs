@@ -15,8 +15,13 @@ compile program = (initialStack, initialTiDump, initialHeap, globals, tiStatInit
         mainAddr = aLookup globals "main" "main is not defined"
 
 buildInitialHeap :: [CoreScDefn] -> (TiHeap, TiGlobals)
-buildInitialHeap = foldr allocateSc (hInitial, [])
+buildInitialHeap = flip (foldr allocatePrim) primitives 
+                 . foldr allocateSc (hInitial, [])
 
 allocateSc :: CoreScDefn -> (TiHeap, TiGlobals) -> (TiHeap, TiGlobals)
 allocateSc (name, args, body) (heap, globals) = (heap', (name, addr):globals)
   where (heap', addr) = hAlloc heap $ NSupercomb name args body
+
+allocatePrim :: (Name, Primitive) -> (TiHeap, TiGlobals) -> (TiHeap, TiGlobals)
+allocatePrim (name, prim) (heap, globals) = (heap', (name, addr):globals)
+  where (heap', addr) = hAlloc heap $ NPrim name prim

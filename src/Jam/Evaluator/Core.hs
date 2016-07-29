@@ -32,6 +32,22 @@ step state@(stack, dump, heap, globals, stats) = dispatch (hLookup heap (head st
         dispatch (NInd a)                   = indStep state a
         dispatch (NAp a1 a2)                = apStep state a1 a2
         dispatch (NSupercomb sc args body)  = scStep state sc args body
+        dispatch (NPrim n p)                = primStep state n p
+
+primStep :: TiState -> Name -> Primitive -> TiState
+primStep state name prim = case prim of
+                             Neg -> primNeg state
+                             Add -> primAdd state
+                             Sub -> primSub state
+                             Mul -> primMul state
+                             Div -> primDiv state
+
+primNeg, primAdd, primSub, primMul, primDic :: TiState -> TiState
+primNeg (stack, dump, heap, env, stats) = 
+primAdd = undefined
+primSub = undefined
+primMul = undefined
+primDiv = undefined
 
 numStep :: TiState -> Int -> TiState
 numStep state n = error "Number applied as a function!"

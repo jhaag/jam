@@ -1,11 +1,13 @@
 module Jam.Util.Compiler where
 
 import Jam.Language
+import Jam.Library.Prelude
 import Jam.Util.Core
 
 data Node = NAp Addr Addr                     -- Application
           | NSupercomb Name [Name] CoreExpr   -- Supercombinator
           | NNum Int                          -- Number Literal
+          | NPrim Name Primitive              -- Primitive
           | NInd Addr                         -- Indirection to another node in the graph
 
 type TiState = (TiStack, TiDump, TiHeap, TiGlobals, TiStats)
@@ -14,8 +16,8 @@ type TiState = (TiStack, TiDump, TiHeap, TiGlobals, TiStats)
 type TiStack = [Addr]
 
 -- Dump
-data TiDump = DummyTiDump
-initialTiDump = DummyTiDump
+type TiDump = [TiStack]
+initialTiDump = []
 
 --Heap
 type TiHeap = Heap Node

@@ -1,6 +1,13 @@
 module Jam.Library.Prelude where
 
 import Jam.Language
+import Jam.Util.Core
+
+data Primitive = Neg | Add | Sub | Mul | Div
+primitives :: Assoc Name Primitive
+primitives = [("negate", Neg),
+              ("+", Add), ("-", Sub),
+              ("*", Mul), ("/", Div)]
 
 preludeDefs :: CoreProgram
 preludeDefs = [("I",        ["x"],            EVar "x"), 

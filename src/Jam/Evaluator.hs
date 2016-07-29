@@ -69,6 +69,7 @@ showNode (NAp a1 a2) = iConcat [
 showNode (NSupercomb name args body) = String ("NSupercomb " ++ name)
 showNode (NNum n) = String "NNum " <> iNum n
 showNode (NInd a) = String "NInd " <> showAddr a
+showNode (NPrim n p) = String $ "NPrim " ++ n
 
 showAddr :: Addr -> ISeq
 showAddr addr = String (show addr)
