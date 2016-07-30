@@ -19,6 +19,7 @@ library
                      , Jam.Compiler
                      , Jam.Evaluator
                      , Jam.Evaluator.Core
+                     , Jam.Evaluator.Print
                      , Jam.Language
                      , Jam.Language.Core
                      , Jam.Library.Prelude

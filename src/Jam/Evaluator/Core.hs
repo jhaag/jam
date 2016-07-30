@@ -3,7 +3,9 @@ module Jam.Evaluator.Core
     eval
   ) where
 
+import Debug.Trace
 import Jam.Language
+import Jam.Library.Prelude
 import Jam.Util
 
 eval :: TiState -> [TiState]
@@ -17,7 +19,7 @@ doAdmin :: TiState -> TiState
 doAdmin state = applyToStats tiStatIncStep state
 
 tiFinal :: TiState -> Bool
-tiFinal ([addr], dump, heap, globals, stats) = isDataNode (hLookup heap addr)
+tiFinal ([addr], dump, heap, globals, stats) = null dump && isDataNode (hLookup heap addr)
 tiFinal ([], _, _, _, _) = error "Empty Stack!"
 tiFinal _                = False -- stack contains more than one address
 
@@ -42,22 +44,55 @@ primStep state name prim = case prim of
                              Mul -> primMul state
                              Div -> primDiv state
 
-primNeg, primAdd, primSub, primMul, primDic :: TiState -> TiState
-primNeg (stack, dump, heap, env, stats) = 
-primAdd = undefined
+primNeg, primAdd, primSub, primMul, primDiv :: TiState -> TiState
+primNeg ((s:t:ack), dump, heap, env, stats) = (t:ack, dump, heap', env, stats)
+  where (NAp neg arg) = hLookup heap t
+        node = hLookup heap arg
+        heap' = if isDataNode node
+                   then let (NNum n) = node
+                         in hUpdate heap t (NNum (-n))
+                   else let states = eval ([arg], (arg:ack):dump, heap, env, stats)
+                            ([numAddr], _, heap'', _, stats') = last states
+                            (NNum n) = hLookup heap'' numAddr
+                         in hUpdate heap t (NNum (-n))
+primAdd state = primArith state (+)
 primSub = undefined
 primMul = undefined
 primDiv = undefined
 
+primArith :: TiState -> (Int -> Int -> Int) -> TiState
+primArith ((s:t:a:ck), dump, heap, env, stats) f = (a:ck, dump, heap''', env, stats)
+  where (NAp op a1) = hLookup heap t
+        (NAp ap a2) = hLookup heap a
+        n1 = trace (show a1) $ hLookup heap a1
+        n2 = trace (show a2) $ hLookup heap a2
+        heap' = if isDataNode n1
+                   then trace "@" $ heap
+                   else let states = eval ([a1], (a:ck):dump, heap, env, stats)
+                            ([numAddr], _, heap'''', _, stats') = last states
+                         in hUpdate heap a1 (hLookup heap'''' numAddr)
+        heap'' = if isDataNode n2
+                   then trace "!" $ heap'
+                   else let states = eval ([a2], (a:ck):dump, heap, env, stats)
+                            ([numAddr], _, heap'''', _, stats') = last states
+                         in hUpdate heap' a2 (hLookup heap'''' numAddr)
+        heap''' = let (NNum n1') = hLookup heap'' a1
+                      (NNum n2') = hLookup heap'' a2
+                   in hUpdate heap'' a (NNum (f n1' n2'))
+
 numStep :: TiState -> Int -> TiState
-numStep state n = error "Number applied as a function!"
+numStep (ns, [], heap, globals, stats) _      = error "Number applied as a function."
+numStep ([n], d:ump, heap, globals, stats) _  = (d, ump, heap, globals, stats)
+numStep (ns, dump, heap, globals, stats) _    = error "Number applied as a function."
 
 indStep :: TiState -> Addr -> TiState
 indStep (_:stack, dump, heap, globals, stats) a = (a:stack, dump, heap, globals, stats)
 
 apStep :: TiState -> Addr -> Addr -> TiState
-apStep (stack, dump, heap, globals, stats) a1 a2
-  = (a1:stack, dump, heap, globals, stats)
+apStep (stack, dump, heap, globals, stats) a1 a2 = (a1:stack, dump, heap', globals, stats)
+  where heap' = case hLookup heap a2 of
+                     (NInd addr)  -> hUpdate heap a2 (hLookup heap addr)
+                     _            -> heap
 
 scStep :: TiState -> Name -> [Name] -> CoreExpr -> TiState
 scStep (stack, dump, heap, globals, stats) name args body
