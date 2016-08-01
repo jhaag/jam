@@ -1,1 +1,1 @@
-main = (I 3) + 2
+main = if (Pack{2,0}) 1 2

@@ -1,7 +1,7 @@
-module Jam.Util.Compiler where
+module Jam.Template.Util.Compiler where
 
 import Jam.Language
-import Jam.Library.Prelude
+import Jam.Template.Library.Prelude
 import Jam.Util.Core
 
 data Node = NAp Addr Addr                     -- Application
@@ -9,6 +9,8 @@ data Node = NAp Addr Addr                     -- Application
           | NNum Int                          -- Number Literal
           | NPrim Name Primitive              -- Primitive
           | NInd Addr                         -- Indirection to another node in the graph
+          | NData Int [Addr]                  -- Tag, list of components
+          deriving (Eq)
 
 type TiState = (TiStack, TiDump, TiHeap, TiGlobals, TiStats)
 

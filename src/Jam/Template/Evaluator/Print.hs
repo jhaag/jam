@@ -1,9 +1,10 @@
-module Jam.Evaluator.Print
+module Jam.Template.Evaluator.Print
   (
     showResults
   ) where
 
 import Jam.Library.Print
+import Jam.Template.Util.Compiler
 import Jam.Util
 
 showResults states = iDisplay (iConcat [iLayn (map showState states),
@@ -19,7 +20,9 @@ showStats (stack, dump, heap, globals, stats) = iConcat [
 
 showState :: TiState -> ISeq
 showState (stack, dump, heap, globals, states) = showStack heap stack <> Newline
-                                              <> Newline <> dumpHeap heap
+                                              <> Newline <> dumpHeap heap <> Newline
+                                              <> Newline <> dumpDump heap dump <> Newline
+                                              <> String (replicate 80 '~')
 
 dumpHeap :: TiHeap -> ISeq
 dumpHeap (size, free, env) = iConcat [
@@ -30,9 +33,16 @@ dumpHeap (size, free, env) = iConcat [
   where showHeapItem :: (Addr, Node) -> ISeq
         showHeapItem (addr, node) = showFWAddr addr <> String ": " <> showNode node
 
+dumpDump :: TiHeap -> TiDump -> ISeq
+dumpDump heap stacks = iConcat [
+                                 String $ "Dump(" ++ show (length stacks) ++ ") [",
+                                 Indent ((Newline <> Newline) ~> (map (showStack heap) stacks)),
+                                 String "]"
+                               ]
+
 showStack :: TiHeap -> TiStack -> ISeq
 showStack heap stack = iConcat [
-                                 String "Stk [",
+                                 String "Stack [",
                                  Indent (Newline ~> (map showStackItem stack)),
                                  String "]"
                                ]
@@ -64,6 +74,11 @@ showNode (NSupercomb name args body) = String ("NSupercomb " ++ name)
 showNode (NNum n) = String "NNum " <> iNum n
 showNode (NInd a) = String "NInd " <> showAddr a
 showNode (NPrim n p) = String $ "NPrim " ++ n
+showNode (NData t d) = String ("NData " ++ show t ++ " ") <> iConcat [
+                                                                       String "[",
+                                                                       String ", " ~> map showAddr d,
+                                                                       String "]"
+                                                                     ]
 
 showAddr :: Addr -> ISeq
 showAddr addr = String (show addr)
