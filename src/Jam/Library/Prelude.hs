@@ -1,7 +1,7 @@
 module Jam.Library.Prelude where
 
 import           Jam.Language
-import qualified Jam.Template.Library.Prelude as Template
+import qualified Jam.G.Library.Prelude as Compiler
 import           Jam.Util.Core
 
 preludeDefs :: CoreProgram
@@ -20,4 +20,4 @@ preludeDefs = [("I",        ["x"],            EVar "x"),
                                                   (EVar "f"))]
 
 extraPreludeDefs :: CoreProgram
-extraPreludeDefs = [] ++ Template.extraPreludeDefs
+extraPreludeDefs = [] ++ Compiler.extraPreludeDefs

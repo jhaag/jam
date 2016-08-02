@@ -3,7 +3,7 @@ module Jam
     jamMain
   )where
 
-import Jam.Template.Evaluator
+import Jam.G.Evaluator
 import Jam.Language
 import Jam.Parser.Lexer
 import Jam.Parser
@@ -16,4 +16,4 @@ jamMain = do
   putStrLn "--------------------------------------------------------------------------------"
   print $ parse prog
   putStrLn "--------------------------------------------------------------------------------"
-  putStrLn $ run' prog
+  putStrLn $ run prog

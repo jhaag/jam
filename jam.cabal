@@ -36,6 +36,14 @@ library
                      , Jam.Template.Evaluator.Print
                      , Jam.Template.Library.Prelude
                      , Jam.Template.Util.Compiler
+                     --* G-machine
+                     , Jam.G.Compiler
+                     , Jam.G.Compiler.Core
+                     , Jam.G.Evaluator
+                     , Jam.G.Evaluator.Core
+                     , Jam.G.Evaluator.Print
+                     , Jam.G.Library.Prelude
+                     , Jam.G.Util.Compiler
   build-depends:       base >= 4.7 && < 5
   default-language:    Haskell2010
 
