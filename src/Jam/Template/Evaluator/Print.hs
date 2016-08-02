@@ -1,6 +1,7 @@
 module Jam.Template.Evaluator.Print
   (
-    showResults
+    showResults,
+    showResults'
   ) where
 
 import Jam.Library.Print
@@ -9,6 +10,12 @@ import Jam.Util
 
 showResults states = iDisplay (iConcat [iLayn (map showState states),
                                         showStats (last states)])
+
+showResults' state@(stack, dump, heap, env, stats) 
+  = iDisplay (iConcat [showStack heap stack,
+                       Newline,
+                       String (replicate 80 '~'),
+                       showStats state])
 
 showStats :: TiState -> ISeq
 showStats (stack, dump, heap, globals, stats) = iConcat [

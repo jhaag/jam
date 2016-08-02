@@ -10,7 +10,6 @@ data Node = NAp Addr Addr                     -- Application
           | NPrim Name Primitive              -- Primitive
           | NInd Addr                         -- Indirection to another node in the graph
           | NData Int [Addr]                  -- Tag, list of components
-          deriving (Eq)
 
 type TiState = (TiStack, TiDump, TiHeap, TiGlobals, TiStats)
 

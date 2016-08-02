@@ -1,6 +1,7 @@
 module Jam.Template.Evaluator.Core
   (
-    eval
+    eval,
+    eval'
   ) where
 
 import Debug.Trace
@@ -16,6 +17,13 @@ eval state = state:future
           | tiFinal state = []
           | otherwise     = eval nextState
         nextState = doAdmin (step state)
+
+eval' :: TiState -> TiState
+eval' state = future
+  where future
+          | tiFinal state = state
+          | otherwise     = eval' nextState
+        nextState = doAdmin (step state) 
 
 doAdmin :: TiState -> TiState
 doAdmin state = applyToStats tiStatIncStep state
@@ -87,18 +95,20 @@ primIf (stack@(prim:ifAp:thenAp:elseAp:rest), dump, heap, env, stats)
         condNode = hLookup heap cond
      in if isDataNode condNode
            then case condNode of
-                     coreTrue  -> let (NAp then' resAddr) = hLookup heap thenAp
-                                      resNode = hLookup heap resAddr
-                                   in if isDataNode resNode
-                                         then let heap' = hUpdate heap elseAp resNode
-                                               in (elseAp:rest, dump, heap, env, stats)
-                                         else ([resAddr], stack:dump, heap, env, stats)
-                     coreFalse -> let (NAp else' resAddr) = hLookup heap thenAp
-                                      resNode = hLookup heap resAddr
-                                   in if isDataNode resNode
-                                         then let heap' = hUpdate heap elseAp resNode
-                                               in (elseAp:rest, dump, heap, env, stats)
-                                         else ([resAddr], stack:dump, heap, env, stats)
+                     --true
+                     (NData 2 []) -> let (NAp then' resAddr) = hLookup heap thenAp
+                                         resNode = hLookup heap resAddr
+                                      in if isDataNode resNode
+                                            then let heap' = hUpdate heap elseAp resNode
+                                                  in (elseAp:rest, dump, heap', env, stats)
+                                            else ([resAddr], stack:dump, heap, env, stats)
+                     --false
+                     (NData 1 []) -> let (NAp else' resAddr) = hLookup heap elseAp
+                                         resNode = hLookup heap resAddr
+                                      in if isDataNode resNode
+                                            then let heap' = hUpdate heap elseAp resNode
+                                                  in (elseAp:rest, dump, heap', env, stats)
+                                            else ([resAddr], stack:dump, heap, env, stats)
            else ([cond], stack:dump, heap, env, stats)
 primAdd state = primArith state (+)
 primSub state = primArith state (-)

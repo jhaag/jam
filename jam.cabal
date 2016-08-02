@@ -5,9 +5,9 @@ description:         Please see README.md
 homepage:            https://github.com/githubuser/jam#readme
 license:             BSD3
 license-file:        LICENSE
-author:              Author name here
-maintainer:          example@example.com
-copyright:           2016 Author name here
+author:              Jasper Haag
+maintainer:          jhaag@mit.edu
+copyright:           2016 Jasper Haag
 category:            Web
 build-type:          Simple
 -- extra-source-files:
@@ -16,23 +16,26 @@ cabal-version:       >=1.10
 library
   hs-source-dirs:      src
   exposed-modules:     Jam
-                     , Jam.Compiler
-                     , Jam.Evaluator
-                     , Jam.Evaluator.Core
-                     , Jam.Evaluator.Print
                      , Jam.Language
-                     , Jam.Language.Core
                      , Jam.Library.Prelude
                      , Jam.Library.Print
                      , Jam.Parser
+                     , Jam.Util
+  other-modules:       Jam.Language.Core
                      , Jam.Parser.Core
                      , Jam.Parser.Lexer
                      , Jam.Parser.Syntax
-                     , Jam.Util
-                     , Jam.Util.Compiler
                      , Jam.Util.Core
                      , Jam.Util.Language
                      , Jam.Util.Parser
+                     --| Different versions of the compiler
+                     --* Template
+                     , Jam.Template.Compiler
+                     , Jam.Template.Evaluator
+                     , Jam.Template.Evaluator.Core
+                     , Jam.Template.Evaluator.Print
+                     , Jam.Template.Library.Prelude
+                     , Jam.Template.Util.Compiler
   build-depends:       base >= 4.7 && < 5
   default-language:    Haskell2010
 

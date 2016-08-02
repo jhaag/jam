@@ -1,6 +1,7 @@
 module Jam.Template.Evaluator 
   (
-    run
+    run,
+    run'
   ) where
 
 import Jam.Template.Compiler
@@ -10,3 +11,6 @@ import Jam.Parser
 
 run :: String -> String
 run = showResults . eval . compile . parse
+
+run' :: String -> String
+run' = showResults' . eval' . compile . parse
