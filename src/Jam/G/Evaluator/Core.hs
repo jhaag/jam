@@ -28,15 +28,16 @@ dispatch (Pushglobal f) = pushglobal f
 dispatch (Pushint n)    = pushint n
 dispatch Mkap           = mkap
 dispatch (Push n)       = push n
-dispatch (Slide n)      = slide n
-dispatch (Unwind)       = unwind
+dispatch Unwind         = unwind
+dispatch (Update n)     = update n
+dispatch (Pop n)        = pop n
 
 pushglobal :: Name -> GmState -> GmState
 pushglobal f state = putStack (a:getStack state) state
   where a = aLookup (getEnv state) f ("Undeclared global " ++ f)
 
 pushint :: Int -> GmState -> GmState
-pushint n state = if (show n) `elem` getEnv state
+pushint n state = if (show n) `elem` aDomain (getEnv state)
                      then let a = aLookup (getEnv state) (show n) ("Can't happen")
                            in putStack (a:getStack state) state
                      else let (heap', a) = hAlloc (getHeap state) (NNum n)
@@ -55,10 +56,6 @@ push n state = putStack (a:as) state
         getArg :: Node -> Addr
         getArg (NAp a1 a2) = a2
 
-slide :: Int -> GmState -> GmState
-slide n state = putStack (a:drop n as) state
-  where (a:as) = getStack state
-
 unwind :: GmState -> GmState
 unwind state = newState (hLookup heap a)
   where (a:as) = getStack state
@@ -69,3 +66,12 @@ unwind state = newState (hLookup heap a)
         newState (NGlobal n c) = if length as < n
                                     then error "Unwinding with too few arguments"
                                     else putCode c state
+        newState (NInd a')     = (putCode [Unwind]) . (putStack (a':as)) $ state
+
+update :: Int -> GmState -> GmState
+update n state = (putHeap heap') . (putStack as) $ state
+  where (a:as) = getStack state
+        heap' = hUpdate (getHeap state) (as !! n) (NInd a)
+
+pop :: Int -> GmState -> GmState
+pop n state = putStack (drop n (getStack state)) state

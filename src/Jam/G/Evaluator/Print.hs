@@ -38,7 +38,8 @@ showInstruction (Pushglobal f) = String $ "Pushglobal " ++ f
 showInstruction (Push n)       = String $ "Push " ++ show n
 showInstruction (Pushint n)    = String $ "Pushint " ++ show n
 showInstruction Mkap           = String "Mkap"
-showInstruction (Slide n)      = String $ "Slide " ++ show n
+showInstruction (Update n)     = String $ "Update " ++ show n
+showInstruction (Pop n)        = String $ "Pop " ++ show n
 
 -- For printing the state transitions from execution
 showState :: GmState -> ISeq
@@ -65,6 +66,7 @@ showNode s a (NNum n) = iNum n
 showNode s a (NGlobal n g) = String $ "Global " ++ v
   where v = head [n | (n, b) <- getEnv s, a == b]
 showNode s a (NAp a1 a2) = String $ "Ap " ++ showAddr a1 ++ " " ++ showAddr a2
+showNode s a (NInd a') = String $ "Indirection " ++ showAddr a'
 
 -- For printing statistics about the compilation and execution process
 showStats :: GmState -> ISeq

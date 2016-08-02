@@ -8,7 +8,7 @@ compileSc :: (Name, [Name], CoreExpr) -> GmCompiledSc
 compileSc (name, args, body) = (name, length args, compileR body (zip args [0..]))
 
 compileR :: GmCompiler
-compileR exp args = compileC exp args ++ [Slide (length args + 1), Unwind]
+compileR exp args = compileC exp args ++ [Update (length args), Pop (length args), Unwind]
 
 compileC :: GmCompiler
 compileC (EVar v) args

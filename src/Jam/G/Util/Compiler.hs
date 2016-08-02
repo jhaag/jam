@@ -50,21 +50,16 @@ data Instruction = Unwind
                  | Pushint Int
                  | Push Int
                  | Mkap
-                 | Slide Int
-
-instance Eq Instruction where
-  Unwind == Unwind                 = True
-  (Pushglobal a) == (Pushglobal b) = a == b
-  (Pushint a) == (Pushint b)       = a == b
-  (Push a) == (Push b)             = a == b
-  Mkap == Mkap                     = True
-  (Slide a) == (Slide b)           = a == b
-  _ == _                           = False
+                 | Update Int
+                 | Pop Int
+                 deriving (Eq)
 
 -- Nodes
 data Node = NNum Int
           | NAp Addr Addr
           | NGlobal Int GmCode
+          | NInd Addr
+          deriving (Eq)
 
 -- Compilation Specifics
 type GmCompiledSc  = (Name, Int, GmCode)
