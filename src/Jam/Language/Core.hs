@@ -40,7 +40,7 @@ data Expr a = EVar Name             -- Variables
                 (Expr a)            --    Expression to scrutinise
                 [Alter a]           --    Alternatives
             | ELam [a] (Expr a)     -- Lambda abstractions
-            deriving (Show)
+            deriving (Eq, Show)
 
 data PartialExpr = NoOp
                  | FoundOp Name CoreExpr

@@ -28,4 +28,22 @@ primitives = [("negate", Neg),
               ("==", E), ("/=", NE)]
 
 extraPreludeDefs :: CoreProgram
-extraPreludeDefs = []
+extraPreludeDefs = [("true", [], EConstr 2 0),
+                    ("false", [], EConstr 1 0),
+                    ("not", ["x"], (EAp (EAp (EVar "/=")
+                                             (EVar "true"))
+                                        (EVar "x"))),
+                    ("&&", ["x", "y"], (EAp (EAp (EAp (EVar "if") 
+                                                      (EVar "x"))
+                                                 (EAp (EAp (EAp (EVar "if")
+                                                                (EVar "y"))
+                                                           (EVar "true"))
+                                                      (EVar "false")))
+                                            (EVar "false"))),
+                    ("||", ["x", "y"], (EAp (EAp (EAp (EVar "if") 
+                                                      (EVar "x"))
+                                                 (EVar "true"))
+                                            (EAp (EAp (EAp (EVar "if")
+                                                           (EVar "y"))
+                                                      (EVar "true"))
+                                                 (EVar "false"))))]

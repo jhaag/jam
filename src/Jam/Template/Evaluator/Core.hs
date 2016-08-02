@@ -126,12 +126,10 @@ primArith state f = primDyadic state (\n1 n2 -> let (NNum n1') = n1
                                                     (NNum n2') = n2
                                                  in NNum $ f n1' n2')
 
-primComp :: TiState -> (Int -> Int -> Bool) -> TiState
-primComp state f = primDyadic state (\n1 n2 -> let (NNum n1') = n1
-                                                   (NNum n2') = n2
-                                                in if f n1' n2'
-                                                      then NData 2 []
-                                                      else NData 1 [])
+primComp :: TiState -> (Node -> Node -> Bool) -> TiState
+primComp state f = primDyadic state (\n1 n2 -> if f n1 n2
+                                                  then NData 2 []
+                                                  else NData 1 [])
 
 primDyadic :: TiState -> (Node -> Node -> Node) -> TiState
 primDyadic (stack@(prim:lhs:rhs:rest), dump, heap, env, stats) f
