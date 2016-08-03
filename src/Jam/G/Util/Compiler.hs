@@ -34,7 +34,7 @@ putStats :: GmStats -> GmState -> GmState
 putStats stats' (State output i stack dump heap env stats) = State output i stack dump heap env stats'
 
 initialCode :: GmCode
-initialCode = [Pushglobal "main", Eval]
+initialCode = [Pushglobal "main", Eval, Print]
 
 type GmOutput = String
 type GmCode  = [Instruction]

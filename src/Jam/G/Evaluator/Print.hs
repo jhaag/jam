@@ -85,7 +85,7 @@ showInstruction Print            = String "Print"
 
 showCase :: (Int, GmCode) -> ISeq
 showCase (tag, code) = iConcat [
-                                 String "| ", iNum tag,
+                                 String "| ", iNum tag, String " -> ",
                                  shortShowInstructions 3 code
                                ]
 

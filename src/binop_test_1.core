@@ -1,2 +1,4 @@
-fac n = if (n == 0) 1 (n * (fac (n - 1)));
-main = fac 25
+IF cond then else = case cond of
+                      <1> -> else;
+                      <2> -> then;
+main = IF Pack{2,0} 10 11

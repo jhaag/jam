@@ -57,6 +57,10 @@ dispatch Le             = le
 dispatch Gt             = gt
 dispatch Ge             = ge
 dispatch (Cond c1 c2)   = cond c1 c2
+dispatch (Pack t a)     = pack t a
+dispatch (Casejump cs)  = casejump cs
+dispatch (Split n)      = split n
+dispatch Print          = print'
 
 pushglobal :: Name -> GmState -> GmState
 pushglobal f state = putStack (a:getStack state) state
@@ -88,6 +92,10 @@ unwind state = newState (hLookup heap a)
                                     then state
                                     else let ((code', stack'):ds) = getDump state
                                           in (putDump ds) . (putCode code') . (putStack (a:stack')) $ state
+        newState (NConstr n as) = if null $ getDump state
+                                     then state
+                                     else let ((code', stack'):ds) = getDump state
+                                           in (putDump ds) . (putCode code') . (putStack (a:stack')) $ state
         newState (NAp a1 a2)   = (putCode [Unwind]) . (putStack (a1:a:as)) $ state
         newState (NGlobal n c) = if length as < n
                                     then error "Unwinding with too few arguments"
@@ -146,6 +154,38 @@ cond i1 i2 state = (putStack stack') . (putCode (code' ++ getCode state)) $ stat
                      (NNum 1) -> i1
                      (NNum 0) -> i2
                      _        -> error "Non exhaustive case expression"
+
+pack :: Int -> Int -> GmState -> GmState
+pack tag arity state = (putHeap heap') . (putStack (a:stack')) $ state
+  where stack = getStack state
+        args = take arity stack
+        stack' = drop arity stack
+        (heap', a) = hAlloc (getHeap state) (NConstr tag args)
+
+casejump :: [(Int, GmCode)] -> GmState -> GmState
+casejump [] state = error "Non-exhaustive pattern matching in case statement"
+casejump ((tag, code):cs) state = let (a:_) = getStack state
+                                      (NConstr constTag constArgs) = hLookup (getHeap state) a
+                                   in if tag == constTag
+                                         then putCode (code ++ getCode state) state
+                                         else casejump cs state
+
+split :: Int -> GmState -> GmState
+split n state = let (a:stack) = getStack state
+                    (NConstr constTag constArgs) = hLookup (getHeap state) a
+                 in if length constArgs /= n
+                       then error "This shouldn't happen"
+                       else putStack (constArgs ++ stack) state
+
+print' :: GmState -> GmState
+print' state = let (a:stack) = getStack state
+                   node = hLookup (getHeap state) a
+                in case node of
+                        (NNum n)           -> (putOutput (getOutput state ++ show n ++ " ")) . (putStack stack) $ state
+                        (NConstr tag args) -> let i' = concat (replicate (length args) [Eval, Print])
+                                               in (putOutput (getOutput state)) . 
+                                                  (putCode (i' ++ getCode state)) . 
+                                                  (putStack (args ++ stack)) $ state
 
 arithmetic1 :: (Int -> Int) -> (GmState -> GmState)
 arithmetic1 = primitive1 boxInteger unboxInteger

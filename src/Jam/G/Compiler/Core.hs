@@ -23,7 +23,23 @@ compileE e@(EAp (EAp (EVar op) e0) e1) args = if op `elem` aDomain builtInDyadic
                                                       compileE e1 (argOffset 1 args) ++ 
                                                       [aLookup builtInDyadic op "Can't happen"]
                                                  else compileC e args ++ [Eval]
-compileE e args = compileC e args ++ [Eval]
+compileE (ECase exp alts) args = compileE exp args ++ [Casejump (compileD compileE' alts args)]
+compileE e args = let (core, exps) = decompose e
+                  in case core of
+                          (EConstr t a) -> concatMap (\(exp, offset) -> compileC exp (argOffset offset args)) 
+                                                     (zip (reverse exps) [0..])
+                                           ++ [Pack t a]
+                          _             -> compileC e args ++ [Eval] 
+
+compileE' :: Int -> GmCompiler
+compileE' offset expr args = [Split offset] ++ compileE expr args ++ [Slide offset]
+
+compileD :: (Int -> GmCompiler)   -- compiler for alternative bodies
+         -> [CoreAlt]             -- the list of alternatives
+         -> GmCompilerEnv         -- the current environment
+         -> [(Int, GmCode)]       -- list of alternative code sequences
+compileD comp alts env 
+  = [(tag, comp (length names) body (zip names [0..] ++ argOffset (length names) env)) | (tag, names, body) <- alts]
 
 compileC :: GmCompiler
 compileC (EVar v) args
@@ -37,7 +53,12 @@ compileC (EAp e1 e2) args = compileC e2 args ++
 compileC (ELet recursive defs exp) args
   | recursive = compileLetRec compileC defs exp args
   | otherwise = compileLet    compileC defs exp args
-compileC _ _ = error "Not implemented yet"
+compileC e args = let (core, exps) = decompose e
+                   in case core of
+                           (EConstr t a) -> concatMap (\(exp, offset) -> compileC exp (argOffset offset args)) 
+                                                     (zip (reverse exps) [0..])
+                                            ++ [Pack t a]
+                           _             -> error "Not implemented yet"
 
 compileLetRec :: GmCompiler -> [(Name, CoreExpr)] -> GmCompiler
 compileLetRec comp defs exp env = [Alloc (length defs)] ++ compileLetRec' defs env' ++ comp exp env' ++ [Slide (length defs)]
@@ -58,6 +79,13 @@ compileLet' ((name, expr):defs) env = compileC expr env ++ compileLet' defs (arg
 compileArgs :: [(Name, CoreExpr)] -> GmCompilerEnv -> GmCompilerEnv
 compileArgs defs env = zip (map fst defs) [n - 1, n - 2 .. 0] ++ argOffset n env
   where n = length defs
+
+decompose :: CoreExpr -> (CoreExpr, [CoreExpr])
+decompose e = decompose' e []
+  where decompose' :: CoreExpr -> [CoreExpr] -> (CoreExpr, [CoreExpr])
+        decompose' e args = case e of
+                                 (EAp l r) -> decompose' l (r:args)
+                                 _         -> (e, args)
 
 argOffset :: Int -> GmCompilerEnv -> GmCompilerEnv
 argOffset n args = [(v, n + m) | (v, m) <- args]
