@@ -1,5 +1,6 @@
 module Jam.G.Compiler.Core where
 
+import Jam.G.Library.Prelude
 import Jam.G.Util.Compiler
 import Jam.Language
 import Jam.Util.Core
@@ -8,7 +9,21 @@ compileSc :: (Name, [Name], CoreExpr) -> GmCompiledSc
 compileSc (name, args, body) = (name, length args, compileR body (zip args [0..]))
 
 compileR :: GmCompiler
-compileR exp args = compileC exp args ++ [Update (length args), Pop (length args), Unwind]
+compileR exp args = compileE exp args ++ [Update (length args), Pop (length args), Unwind]
+
+compileE :: GmCompiler
+compileE (ENum n) args = [Pushint n]
+compileE (ELet recursive defs exp) args
+  | recursive = compileLetRec compileE defs exp args
+  | otherwise = compileLet    compileE defs exp args
+compileE (EAp (EVar "negate") e) args = compileE e args ++ [Neg]
+compileE (EAp (EAp (EAp (EVar "if") e0) e1) e2) args = compileE e0 args ++ [Cond (compileE e1 args) (compileE e2 args)]
+compileE e@(EAp (EAp (EVar op) e0) e1) args = if op `elem` aDomain builtInDyadic
+                                                 then compileE e0 args ++ 
+                                                      compileE e1 (argOffset 1 args) ++ 
+                                                      [aLookup builtInDyadic op "Can't happen"]
+                                                 else compileC e args ++ [Eval]
+compileE e args = compileC e args ++ [Eval]
 
 compileC :: GmCompiler
 compileC (EVar v) args

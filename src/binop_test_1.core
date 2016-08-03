@@ -1,2 +1,2 @@
-Y f = letrec x = f x in x;
-main = K (Y I) 3
+fac n = if (n == 0) 1 (n * (fac (n - 1)));
+main = fac 25
