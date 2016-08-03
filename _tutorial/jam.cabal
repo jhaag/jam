@@ -16,7 +16,34 @@ cabal-version:       >=1.10
 library
   hs-source-dirs:      src
   exposed-modules:     Jam
-  other-modules:       
+                     , Jam.Language
+                     , Jam.Library.Prelude
+                     , Jam.Library.Print
+                     , Jam.Parser
+                     , Jam.Util
+  other-modules:       Jam.Language.Core
+                     , Jam.Parser.Core
+                     , Jam.Parser.Lexer
+                     , Jam.Parser.Syntax
+                     , Jam.Util.Core
+                     , Jam.Util.Language
+                     , Jam.Util.Parser
+                     --| Different versions of the compiler
+                     --* Template
+                     , Jam.Template.Compiler
+                     , Jam.Template.Evaluator
+                     , Jam.Template.Evaluator.Core
+                     , Jam.Template.Evaluator.Print
+                     , Jam.Template.Library.Prelude
+                     , Jam.Template.Util.Compiler
+                     --* G-machine
+                     , Jam.G.Compiler
+                     , Jam.G.Compiler.Core
+                     , Jam.G.Evaluator
+                     , Jam.G.Evaluator.Core
+                     , Jam.G.Evaluator.Print
+                     , Jam.G.Library.Prelude
+                     , Jam.G.Util.Compiler
   build-depends:       base >= 4.7 && < 5
   default-language:    Haskell2010
 
