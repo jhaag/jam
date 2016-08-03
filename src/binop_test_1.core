@@ -1,3 +1,2 @@
-twice f x = f (f x);
-id x = x;
-main = twice twice id 3
+Y f = letrec x = f x in x;
+main = K (Y I) 3

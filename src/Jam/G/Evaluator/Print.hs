@@ -40,6 +40,8 @@ showInstruction (Pushint n)    = String $ "Pushint " ++ show n
 showInstruction Mkap           = String "Mkap"
 showInstruction (Update n)     = String $ "Update " ++ show n
 showInstruction (Pop n)        = String $ "Pop " ++ show n
+showInstruction (Slide n)      = String $ "Slide " ++ show n
+showInstruction (Alloc n)      = String $ "Alloc " ++ show n
 
 -- For printing the state transitions from execution
 showState :: GmState -> ISeq

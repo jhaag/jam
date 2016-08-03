@@ -31,6 +31,8 @@ dispatch (Push n)       = push n
 dispatch Unwind         = unwind
 dispatch (Update n)     = update n
 dispatch (Pop n)        = pop n
+dispatch (Slide n)      = slide n
+dispatch (Alloc n)      = alloc n
 
 pushglobal :: Name -> GmState -> GmState
 pushglobal f state = putStack (a:getStack state) state
@@ -50,11 +52,8 @@ mkap state = (putHeap heap') . (putStack (a:as')) $ state
         (a1:a2:as') = getStack state
 
 push :: Int -> GmState -> GmState
-push n state = putStack (a:as) state
-  where as = getStack state
-        a  = getArg (hLookup (getHeap state) (as !! (n + 1)))
-        getArg :: Node -> Addr
-        getArg (NAp a1 a2) = a2
+push n state = putStack (stack !! n:stack) state
+  where stack = getStack state
 
 unwind :: GmState -> GmState
 unwind state = newState (hLookup heap a)
@@ -65,8 +64,15 @@ unwind state = newState (hLookup heap a)
         newState (NAp a1 a2)   = (putCode [Unwind]) . (putStack (a1:a:as)) $ state
         newState (NGlobal n c) = if length as < n
                                     then error "Unwinding with too few arguments"
-                                    else putCode c state
+                                    else let stack' = rearrange n (getHeap state) (getStack state)
+                                          in (putStack stack') . (putCode c) $ state
         newState (NInd a')     = (putCode [Unwind]) . (putStack (a':as)) $ state
+
+rearrange :: Int -> GmHeap -> GmStack -> GmStack
+rearrange n heap as = take n as' ++ drop n as
+  where as' = map (getArg . hLookup heap) (tail as)
+        getArg :: Node -> Addr
+        getArg (NAp a1 a2) = a2
 
 update :: Int -> GmState -> GmState
 update n state = (putHeap heap') . (putStack as) $ state
@@ -75,3 +81,16 @@ update n state = (putHeap heap') . (putStack as) $ state
 
 pop :: Int -> GmState -> GmState
 pop n state = putStack (drop n (getStack state)) state
+
+slide :: Int -> GmState -> GmState
+slide n state = putStack (a:drop n as) state
+  where (a:as) = getStack state
+
+alloc :: Int -> GmState -> GmState
+alloc n state = (putHeap heap') . (putStack (stack' ++ getStack state)) $ state
+  where (heap', stack') = allocNodes n (getHeap state)
+        allocNodes :: Int -> GmHeap -> (GmHeap, GmStack)
+        allocNodes 0 heap = (heap, [])
+        allocNodes n heap = (heap'', a:as)
+          where (heap', as) = allocNodes (n - 1) heap
+                (heap'', a) = hAlloc heap' (NInd hNull)

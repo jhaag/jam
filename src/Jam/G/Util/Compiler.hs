@@ -52,6 +52,8 @@ data Instruction = Unwind
                  | Mkap
                  | Update Int
                  | Pop Int
+                 | Slide Int
+                 | Alloc Int
                  deriving (Eq)
 
 -- Nodes
