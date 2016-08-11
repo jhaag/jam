@@ -25,6 +25,7 @@ library
                      , Jam.Language.Jam.Operators
                      , Jam.Language.Jam.Operators.Core
                      , Jam.Language.Lambda.Enriched.Core
+                     , Jam.Language.Lambda.Enriched.Pretty
                      , Jam.Language.Lambda.Simple.Core
                      , Jam.Parser.Core
                      , Jam.Parser.Lexer
@@ -34,6 +35,7 @@ library
                      , Jam.Util.Helpers
                      , Jam.Util.Language
                      , Jam.Util.Parser
+                     , Jam.Util.PrettyPrinter
   build-depends:       base >= 4.7 && < 5
   default-language:    Haskell2010
 

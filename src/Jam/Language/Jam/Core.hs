@@ -3,10 +3,10 @@ module Jam.Language.Jam.Core where
 import Jam.Language.Jam.Operators
 
 keywords :: [String]
-keywords = ["case", "in", "let", "letrec", "of", "Pack"]
+keywords = ["case", "in", "let", "letrec", "of", "Pack", "true", "false", "where"]
 
 operatorSymbols :: String
-operatorSymbols = "~!@#$%^&*-+=|<>?/\\"
+operatorSymbols = "~!@#$%^&*-+=|<>?/"
 
 -- Type Synonyms
 type Name = String
@@ -16,7 +16,7 @@ recursive, nonRecursive :: IsRec
 recursive     = True
 nonRecursive  = False
 
-type Alter a = (Int, [a], Expr a)
+type Alter a = (Int, [Expr a], Expr a)
 type JamAlt = Alter Name
 
 type JamExpr = Expr Name

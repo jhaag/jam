@@ -17,20 +17,23 @@ toEnriched program = let ([(_, _, mainExpr)], rest) = partition (\(name, _, _) -
                       in Enriched.ELetRec pats exprs (translateExpression mainExpr)
 
 translateDefinition :: [Jam.JamScDefn] -> (Enriched.Pat, Enriched.Expr)
-translateDefinition [(name, args, expr)] = (Enriched.PVar name, mkApChain (flip (Enriched.ELam)) expr args)
+translateDefinition [(name, args, expr)] = (Enriched.PVar name, mkApChain (flip (Enriched.ELam)) 
+                                                                          (translateExpression expr) 
+                                                                          (map translatePattern args))
 translateDefinition scs                  = 
   let ((n:ames), args, exprs) = unzip3 scs
       freeArgs = genFreeVars (length $ head args)
       defs = zip exprs args
       expr' = constructCases freeArgs defs
-      constructCases :: [String] -> [([Jam.JamExpr], Jam.JamExpr)] -> Enriched.Expr
+      constructCases :: [String] -> [(Jam.JamExpr, [Jam.JamExpr])] -> Enriched.Expr
       constructCases freeVars defs = mkApChain (flip (Enriched.ELam)) 
                                                (mkApChain (Enriched.EAp) (constructFatBar defs) (map Enriched.EVar freeVars))
                                                (map (translatePattern . Jam.EVar) freeVars)
-      constructFatBar :: [([Jam.JamExpr], Jam.JamExpr)] -> Enriched.Expr
+      constructFatBar :: [(Jam.JamExpr, [Jam.JamExpr])] -> Enriched.Expr
       constructFatBar defs = mkApChain (flip (Enriched.EFatBar)) 
-                                       Enriched.FAIL 
-                                       (map (uncurry (mkApChain (flip (Enriched.ELam)))) defs)
+                                       Enriched.ERROR
+                                       (map (uncurry (mkApChain (flip (Enriched.ELam)))) 
+                                                     (map (translateExpression *** map translatePattern) defs))
    in (Enriched.PVar n, expr')
 
 translateExpression :: Jam.JamExpr -> Enriched.Expr
@@ -44,14 +47,17 @@ translateExpression expr = case expr of
                                 Jam.ELam{}    -> translateJamLam expr
 
 translatePattern :: Jam.JamExpr -> Enriched.Pat
-translatePattern expr = case expr of
-                             (Jam.EVar v) -> Enriched.PVar v
-                             (Jam.ENum n) -> Enriched.PNum n
-                             ap@Jam.EAp{} -> let (fn, args) = unwrapAp ap
-                                              in case fn of
-                                                      constr@Jam.EConstr{} -> Enriched.PConstr (show constr) 
-                                                                                               (map translatePattern args)
-                             _            -> error "Patterns can only consist of variables, numbers, and constructors"
+translatePattern expr = 
+  case expr of
+       (Jam.EVar v) -> Enriched.PVar v
+       (Jam.ENum n) -> Enriched.PNum n
+       (Jam.EConstr tag 0) -> Enriched.PConstr tag [] -- For enumeratred types
+       ap@Jam.EAp{} -> let (fn, args) = unwrapAp ap
+                        in case fn of
+                                (Jam.EConstr tag arity) -> if length args /= arity
+                                                              then error "Incomplete constructor"
+                                                              else Enriched.PConstr tag (map translatePattern args)
+                                _                       -> error "Patterns can only consist of variables, numbers, and constructors"
 
 translateJamVar :: Jam.JamExpr -> Enriched.Expr
 translateJamVar (Jam.EVar var) = Enriched.EVar var
@@ -59,8 +65,9 @@ translateJamVar (Jam.EVar var) = Enriched.EVar var
 translateJamNum :: Jam.JamExpr -> Enriched.Expr
 translateJamNum (Jam.ENum num) = Enriched.ENum num
 
+--TODO: Revisit when I figure out how to represent structured data as a regular expression (not a pattern)
 translateJamConstr :: Jam.JamExpr -> Enriched.Expr
-translateJamConstr (Jam.EConstr tag arity) = undefined
+translateJamConstr (Jam.EConstr tag arity) = Enriched.EVar $ "{" ++ show tag ++ "," ++ show arity ++ "}"
 
 translateJamAp :: Jam.JamExpr -> Enriched.Expr
 translateJamAp (Jam.EAp expr1 expr2) = Enriched.EAp (translateExpression expr1) (translateExpression expr2)
@@ -80,8 +87,11 @@ translateJamLet (Jam.ELet recursive defs body) =
 translateJamCase :: Jam.JamExpr -> Enriched.Expr
 translateJamCase (Jam.ECase expr alternatives) = undefined
 
+translateAlt :: Jam.JamAlt -> Enriched.Expr
+translateAlt (tag, args, body) = undefined
+
 translateJamLam :: Jam.JamExpr -> Enriched.Expr
-translateJamLam (Jam.ELam args expr) = mkApChain (flip (Enriched.ELam)) expr args
+translateJamLam (Jam.ELam args expr) = mkApChain (flip (Enriched.ELam)) (translateExpression expr) (map translatePattern args)
 
 -------------------------------------------------------------------- Helpers ---
 unwrapAp :: Jam.JamExpr -> (Jam.JamExpr, [Jam.JamExpr])

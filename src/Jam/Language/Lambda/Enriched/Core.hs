@@ -27,7 +27,8 @@ data Expr = ENum      -- Constants (only numbers for now)
               [Pat]     -- list of patterns for the cases
               [Expr]    -- list of bodies for the cases
           | FAIL      -- Only for use with the Fat Bar; can not appear in any other (sub-)expressions.
-          deriving (Eq, Show)
+          | ERROR     -- Only for use with the Fat Bar; can not appear in any other (sub-)expressions.
+          deriving (Eq)
 
 -- Patterns in the Enriched Lambda Calculus
 data Pat = PNum
@@ -35,6 +36,6 @@ data Pat = PNum
          | PVar
             String
          | PConstr
-            String -- this says <constructor> on page 40, but I'm not sure what that means yet
+            Int -- this says <constructor> on page 40, but I'm not sure what that means yet
             [Pat]
-         deriving (Eq, Show)
+         deriving (Eq)

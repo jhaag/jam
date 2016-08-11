@@ -73,7 +73,7 @@ number :: Parser String
 number = satisfy (isDigit . head)
 
 variable :: Parser String
-variable = satisfy (\s -> (isAlpha . head) s && s `notElem` keywords)
+variable = satisfy (\s -> ((\c -> isAlpha c || c == '_') . head) s && s `notElem` keywords)
 
 keyword :: Parser String
 keyword = oneOf keywords
